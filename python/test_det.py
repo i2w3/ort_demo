@@ -40,7 +40,7 @@ if __name__ == "__main__":
     
     canvas = image.copy()
     cliped_images = []
-    for box, angle, score in results[0]:
+    for box, score in results[0]:
         cv2.polylines(canvas, [box], True, (0, 0, 255), thickness=2)
         cv2.putText(canvas, f"{score:.2f}", tuple(box[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
         clip_image = det_decoder.clip_and_rotate_image(image, box)

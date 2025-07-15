@@ -40,7 +40,7 @@ class DetDecoder:
             height, width = bitmap.shape
             contours, _ = cv2.findContours(bitmap, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
             for j, contour in enumerate(contours):
-                box, angle = self.get_mini_box_with_angle(contour)
+                box = self.get_mini_box_with_angle(contour)
                 
                 # unclip_ratio
                 unclip_box = self.unclip_box(box)
@@ -49,23 +49,15 @@ class DetDecoder:
 
                 if score < self.box_thresh:
                     continue
-                boxes.append((np.int32(unclip_box), angle, score))
+                boxes.append((np.int32(unclip_box), score))
             box_results.append(boxes)
         return box_results
 
-    def get_mini_box_with_angle(self, contour: np.ndarray) -> Tuple[np.ndarray, float]:
-        """
-        获取最小外接矩形框和角度
-        """
+    def get_mini_box_with_angle(self, contour: np.ndarray) -> np.ndarray:
         rect = cv2.minAreaRect(contour)
         box = cv2.boxPoints(rect)
         box = np.int32(box)
-
-        angle = rect[2]
-        if angle < -45:
-            angle += 90
-
-        return box, angle
+        return box
                 
     
     def unclip_box(self, box: np.ndarray) -> np.ndarray:
