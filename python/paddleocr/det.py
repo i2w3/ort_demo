@@ -1,34 +1,24 @@
-import math
-
 import cv2
 import numpy as np
-from typing import Tuple
 
 import onnxruntime as ort
 
 from .utils import CustomLogger, BaseConfig
 
 
-class DBPostProcess:
-    def __init__(self):
-        pass
-
-    def __call__(self):
-        pass
-
-
 class DetDecoder:
     def __init__(self, config: BaseConfig):
         self.config = config
-        self.mask_thresh: float = 0.3
-        self.box_thresh: float = 0.5
-        self.unclip_ratio: float = 1.6
+        self.mask_thresh: float = 0.3 # Threshold for mask score
+        self.box_thresh: float = 0.5 # Threshold for box score
+        self.unclip_ratio: float = 1.6 # Unclip ratio for box expansion
+        self.short_side_thresh: int = 3 # Minimum side length of the box
 
         self.session = ort.InferenceSession(str(config.det_path), providers=config.providers)
-        self.decode = DBPostProcess()
 
     def __call__(self, tensor):
-        det_results: list[np.ndarray] = self.session.run(None, {"x": tensor})
+        ort_inputs:dict[str, np.ndarray] = {i.name: tensor for i in self.session.get_inputs()}
+        det_results: list[np.ndarray] = self.session.run(None, ort_inputs)
         box_results = []
         for i, det_result in enumerate(det_results[0]):
             boxes = []
@@ -40,8 +30,9 @@ class DetDecoder:
             height, width = bitmap.shape
             contours, _ = cv2.findContours(bitmap, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
             for j, contour in enumerate(contours):
-                box = self.get_mini_box_with_angle(contour)
-                
+                box, min_side_length = self.get_mini_box(contour)
+                if min_side_length < self.short_side_thresh:
+                    continue
                 # unclip_ratio
                 unclip_box = self.unclip_box(box)
                 
@@ -53,13 +44,13 @@ class DetDecoder:
             box_results.append(boxes)
         return box_results
 
-    def get_mini_box_with_angle(self, contour: np.ndarray) -> np.ndarray:
+    def get_mini_box(self, contour: np.ndarray) -> np.ndarray:
         rect = cv2.minAreaRect(contour)
         box = cv2.boxPoints(rect)
-        box = np.int32(box)
-        return box
+        side_lengths = [np.linalg.norm(box[i] - box[(i + 1) % 4]) for i in range(4)]
+        min_side_length = min(side_lengths)
+        return np.int32(box), min_side_length
                 
-    
     def unclip_box(self, box: np.ndarray) -> np.ndarray:
         assert box.shape == (4, 2), "Box should have shape (4, 2)"
 

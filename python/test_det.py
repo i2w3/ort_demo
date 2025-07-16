@@ -1,4 +1,4 @@
-from paddleocr import DetDecoder, PPOCRv4
+from paddleocr import DetDecoder, PPOCRv4, PPOCRv5
 import numpy as np
 import cv2
 
@@ -11,8 +11,8 @@ def preprocess(image: np.ndarray):
 
     # Padding to the nearest multiple of 32
     original_h, original_w = image.shape[:2]
-    new_h = (original_h // 31) * 32
-    new_w = (original_w // 31) * 32
+    new_h = ((original_h + 31) // 32) * 32  # 向上取整到32的倍数
+    new_w = ((original_w + 31) // 32) * 32  # 向上取整到32的倍数
     pad_h = new_h - original_h
     pad_w = new_w - original_w
     image = cv2.copyMakeBorder(image, 0, pad_h, 0, pad_w, cv2.BORDER_CONSTANT, value=0)
@@ -27,10 +27,11 @@ def preprocess(image: np.ndarray):
 
 if __name__ == "__main__":
     # Example usage of DetDecoder
-    config = PPOCRv4()
+    config = PPOCRv5()
     det_decoder = DetDecoder(config)
 
     image = cv2.imread("/home/tuf/code/ort_demo/images/5.jpg")
+    h, w = image.shape[:2]
     
     tensor, pad_h, pad_w = preprocess(image)
     processed_image = cv2.cvtColor(tensor[0].transpose(1, 2, 0) * STD + MEAN, cv2.COLOR_RGB2BGR) * 255.0
@@ -39,6 +40,7 @@ if __name__ == "__main__":
     results = det_decoder(tensor)
     
     canvas = image.copy()
+    canvas = canvas[:h, :w]  # Crop to original size
     cliped_images = []
     for box, score in results[0]:
         cv2.polylines(canvas, [box], True, (0, 0, 255), thickness=2)

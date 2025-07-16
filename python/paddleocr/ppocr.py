@@ -4,7 +4,7 @@ import numpy as np
 from .utils import BaseConfig, CustomLogger
 
 from .det import DetDecoder
-
+from .cls import AngleClassifier
 
 class PPOCR:
     def __init__(self, config: BaseConfig):
@@ -12,6 +12,7 @@ class PPOCR:
         self.logger = CustomLogger(logger_level=config.logger_level, file_logging=config.file_logging, logger_name="PPOCR") if config.enable_logging else None
 
         self.det_model = DetDecoder(config)
+        self.cls_model = 
         self.dict_list = self.load_dict(config.dict_path)
 
         self.mean = np.array([0.485, 0.456, 0.406], dtype=np.float32).reshape((1,1,3))

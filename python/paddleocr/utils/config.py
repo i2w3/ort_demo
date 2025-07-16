@@ -13,6 +13,9 @@ class BaseConfig:
     enable_cls: bool = True
     enable_rec: bool = True
 
+    mean: list[float] = field(default_factory=lambda: [0.485, 0.456, 0.406])
+    std:  list[float] = field(default_factory=lambda: [0.229, 0.224, 0.225])
+
 
 @dataclass
 class PPOCRv4(BaseConfig):
