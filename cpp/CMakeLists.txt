@@ -5,6 +5,8 @@ project(ORTDemo CXX)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(USE_CUDA "Use CUDA for GPU acceleration" OFF)
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 # OpenCV
@@ -26,6 +28,7 @@ find_package(ONNXRuntime REQUIRED)
 # endif (ONNXRuntime_FOUND)
 
 
-add_executable(ORTDemo main.cpp)
+add_executable(test_cls src/test_cls.cpp src/cls.cpp)
 
-target_link_libraries(ORTDemo ${OpenCV_LIBS} ${ONNXRuntime_LIBRARIES})
+target_include_directories(test_cls PRIVATE ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS} ./include)
+target_link_libraries(test_cls ${OpenCV_LIBS} ${ONNXRuntime_LIBRARIES})
