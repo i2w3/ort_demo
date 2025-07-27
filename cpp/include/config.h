@@ -1,5 +1,6 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
+
 #include <string>
 
 class Config {
@@ -13,9 +14,21 @@ class Config {
         std::string rec_path = "";
         std::string dict_path = "";
 
+        // cls model settings
         std::array<int64_t, 4> cls_image_shape;
+
+        // det model settings
+        float mask_thresh;       // Threshold for mask score
+        float box_thresh;        // Threshold for box score
+        float unclip_ratio;      // Unclip ratio for box expansion
+        int short_side_thresh;   // Minimum side length of the box
+
+        // rec model settings
         std::array<int64_t, 4> rec_image_shape;
 
+        // dictionary settings
+        int dict_blank;
+        int dict_offset;
 };
 
 class PPOCRv4Config: public Config {
@@ -28,17 +41,15 @@ class PPOCRv4Config: public Config {
 
             cls_image_shape = {1, 3, 48, 192};
             rec_image_shape = {1, 3, 48, 320};
+
+            mask_thresh = 0.3f;
+            box_thresh = 0.5f;
+            unclip_ratio = 1.6f;
+            short_side_thresh = 3;
+
+            dict_blank = 0;
+            dict_offset = 1;
         }
-
-        // det model settings
-        float mask_thresh = 0.3; // Threshold for mask score
-        float box_thresh = 0.5; // Threshold for box score
-        float unclip_ratio = 1.6; // Unclip ratio for box expansion
-        int short_side_thresh = 3; // Minimum side length of the box
-
-        // dictionary settings
-        int dict_blank = 0;
-        int dict_offset = 1;
 };
 
 #endif // __CONFIG_H__

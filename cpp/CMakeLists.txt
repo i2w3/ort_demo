@@ -1,11 +1,15 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(ORTDemo CXX)
+project(ORTDemo 
+        LANGUAGES CXX 
+        VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(USE_CUDA "Use CUDA for GPU acceleration" OFF)
+option(USE_LOGGER "Use custom logger" OFF)
+configure_file(./include/version.h.in version.h)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -29,6 +33,9 @@ find_package(ONNXRuntime REQUIRED)
 
 
 add_executable(test_cls src/test_cls.cpp src/cls.cpp)
-
-target_include_directories(test_cls PRIVATE ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS} ./include)
+target_include_directories(test_cls PRIVATE ${PROJECT_BINARY_DIR} ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS} ./include)
 target_link_libraries(test_cls ${OpenCV_LIBS} ${ONNXRuntime_LIBRARIES})
+
+add_executable(test_det src/test_det.cpp src/det.cpp)
+target_include_directories(test_det PRIVATE ${PROJECT_BINARY_DIR} ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS} ./include)
+target_link_libraries(test_det ${OpenCV_LIBS} ${ONNXRuntime_LIBRARIES})

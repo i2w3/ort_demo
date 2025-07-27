@@ -9,10 +9,6 @@ class BaseConfig:
     logger_level: str = "debug"  # Options: 'debug', 'info', 'warning', 'error', 'critical'
     file_logging: bool = True
 
-    enable_det: bool = True
-    enable_cls: bool = True
-    enable_rec: bool = True
-
     mean: list[float] = field(default_factory=lambda: [0.485, 0.456, 0.406])
     std:  list[float] = field(default_factory=lambda: [0.229, 0.224, 0.225])
 
@@ -28,6 +24,10 @@ class PPOCRv4(BaseConfig):
     dict_blank: int = 0
     dict_offset: int = 1
 
+    const_height = 48
+    cls_max_width = 192
+    rec_max_width = 320
+
 
 @dataclass
 class PPOCRv5(BaseConfig):
@@ -39,3 +39,7 @@ class PPOCRv5(BaseConfig):
 
     dict_blank: int = 0
     dict_offset: int = 1
+
+    const_height = 48
+    cls_max_width = 192
+    rec_max_width = 320

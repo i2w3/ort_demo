@@ -50,7 +50,7 @@ AngleResults AngleClassifier::getAngles(std::vector<float> &inputData) {
             maxIndex = i;
         }
     }
-    results.push_back(Angle(indexToAngleType(maxIndex), maxScore));
+    results.push_back(Angle(parseAngleType(maxIndex), maxScore));
     
     return results;
 }

@@ -25,17 +25,17 @@ class PPOCR:
         self.cls_model = AngleClassifier(config)
         self.rec_model = TextRecognizer(config)
 
-        self.mean = np.array([0.485, 0.456, 0.406], dtype=np.float32).reshape((1,1,3))
-        self.std  = np.array([0.229, 0.224, 0.225], dtype=np.float32).reshape((1,1,3))
-        self.const_height = 48
-        self.cls_max_width = 192
-        self.rec_max_width = 320
+        self.mean = np.array(config.mean, dtype=np.float32).reshape((1,1,3))
+        self.std  = np.array(config.std , dtype=np.float32).reshape((1,1,3))
+
+        self.const_height = config.const_height
+        self.cls_max_width = config.cls_max_width
+        self.rec_max_width = config.rec_max_width
         self.font_path = "/home/tuf/code/ort_demo/assets/YAHEI CONSOLAS HYBRID.ttf"
 
 
-    def __call__(self, image:np.ndarray):
+    def __call__(self, image:np.ndarray, enable_det:bool=True, enable_cls:bool=True, enable_rec:bool=True):
         ocr_results = []
-        h, w = image.shape[:2]
         canvas = image.copy()
         input_data = self.preprocess(image)
         det_results = self.det_model(input_data)
@@ -95,7 +95,7 @@ class PPOCR:
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         h, w = image.shape[:2]
 
-        # 固定高度 48，动态调整宽度到 <= 192
+        # 固定高度 48，动态调整宽度到 <= max_width
         ratio = w / float(h)
         resized_w = int(const_height * ratio)
         if resized_w > max_width:
