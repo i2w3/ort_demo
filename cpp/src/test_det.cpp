@@ -73,6 +73,27 @@ int main(){
         std::cout << "Image preprocessed successfully." << std::endl;
         auto outputdata = model.detect(tensor.data, tensor.image_shape);
         auto results = model.decode(outputdata, tensor.image_shape);
+
+        std::vector<cv::Mat> clip_images;
+        for (const auto& result : results) {
+            // 提取四个顶点
+            cv::Point2f box_points[4];
+            for (int i = 0; i < 4; i++) {
+                box_points[i] = cv::Point2f(
+                    result.boxPoints.at<float>(i, 0),
+                    result.boxPoints.at<float>(i, 1)
+                );
+            }
+            
+            // 裁剪并旋转图像
+            cv::Mat clip_image = model.clip_and_rotate_image(image, std::vector<cv::Point>(box_points, box_points + 4));
+            if (!clip_image.empty()) {
+                clip_images.push_back(clip_image);
+                cv::imwrite("clip_image_" + std::to_string(&result - &results[0]) + ".jpg", clip_image);
+            } else {
+                std::cout << "Warning: Failed to clip image for box " << (&result - &results[0]) << std::endl;
+            }
+        }
         
         // 绘制检测结果
         cv::Mat display_image = image.clone();

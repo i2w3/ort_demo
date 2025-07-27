@@ -15,6 +15,7 @@ class BoundingBoxDetector {
 
         std::vector<float> detect(std::vector<float> &inputData, const std::array<int64_t, 4> &det_image_shape);
         DetResults decode(std::vector<float> &outputData, const std::array<int64_t, 4> &det_image_shape);
+        cv::Mat clip_and_rotate_image(const cv::Mat &image, const std::vector<cv::Point> &box);
 
     private:
         const float mask_thresh;
@@ -34,6 +35,7 @@ class BoundingBoxDetector {
         float box_score_fast(const cv::Mat &bitmap, const std::vector<cv::Point> &box);
         cv::Mat unclip_box(const cv::Point2f box_points[4]);
         cv::Point2f _get_line_intersection(const cv::Point2f& a, const cv::Point2f& b, const cv::Point2f& c, const cv::Point2f& d);
+        
 };
 
 #endif // __DET_H__

@@ -3,25 +3,26 @@
 
 BoundingBoxDetector::BoundingBoxDetector(const Config &config)
     : mask_thresh(config.mask_thresh), box_thresh(config.box_thresh), unclip_ratio(config.unclip_ratio), short_side_thresh(config.short_side_thresh) {
-    session = new Ort::Session(env, config.det_path.c_str(), sessionOptions);
+    this->session = new Ort::Session(this->env, config.det_path.c_str(), this->sessionOptions);
 
     Ort::AllocatorWithDefaultOptions allocator;
-    size_t numInputs = session->GetInputCount();
-    inputNamesOwned.reserve(numInputs);
-    inputNames.reserve(numInputs);
+
+    size_t numInputs = this->session->GetInputCount();
+    this->inputNamesOwned.reserve(numInputs);
+    this->inputNames.reserve(numInputs);
     for (size_t i = 0; i < numInputs; i++) {
-        auto inputName = session->GetInputNameAllocated(i, allocator);
-        inputNamesOwned.push_back(std::move(inputName));
-        inputNames.push_back(inputNamesOwned.back().get());
+        auto inputName = this->session->GetInputNameAllocated(i, allocator);
+        this->inputNamesOwned.push_back(std::move(inputName));
+        this->inputNames.push_back(this->inputNamesOwned.back().get());
     }
 
-    size_t numOutputs = session->GetOutputCount();
-    outputNamesOwned.reserve(numOutputs);
-    outputNames.reserve(numOutputs);
+    size_t numOutputs = this->session->GetOutputCount();
+    this->outputNamesOwned.reserve(numOutputs);
+    this->outputNames.reserve(numOutputs);
     for (size_t i = 0; i < numOutputs; i++) {
-        auto outputName = session->GetOutputNameAllocated(i, allocator);
-        outputNamesOwned.push_back(std::move(outputName));
-        outputNames.push_back(outputNamesOwned.back().get());
+        auto outputName = this->session->GetOutputNameAllocated(i, allocator);
+        this->outputNamesOwned.push_back(std::move(outputName));
+        this->outputNames.push_back(this->outputNamesOwned.back().get());
     }
     std::cout << "BoundingBoxDetector initialized with model: " << config.det_path << std::endl;
 }
@@ -47,14 +48,14 @@ DetResults BoundingBoxDetector::decode(std::vector<float> &outputData, const std
 
     // 安全类型转换
     int height = static_cast<int>(det_image_shape[2]);
-    int width = static_cast<int>(det_image_shape[3]);
+    int width  = static_cast<int>(det_image_shape[3]);
     
-    // outputData(h*w) -> bitmap(h, w) - 零拷贝转换
+    // outputData(h*w) -> bitmap(h, w) + 零拷贝
     cv::Mat bitmap(height, width, CV_32FC1, outputData.data());
 
     // 阈值过滤
     cv::Mat maskMat;
-    cv::threshold(bitmap, maskMat, mask_thresh, 255, cv::THRESH_BINARY);
+    cv::threshold(bitmap, maskMat, this->mask_thresh, 255, cv::THRESH_BINARY);
     maskMat.convertTo(maskMat, CV_8UC1);
     
     // 保存 mask 图片
@@ -74,7 +75,7 @@ DetResults BoundingBoxDetector::decode(std::vector<float> &outputData, const std
                                           cv::norm(boxPoints[1] - boxPoints[2]),
                                           cv::norm(boxPoints[2] - boxPoints[3]),
                                           cv::norm(boxPoints[3] - boxPoints[0])});
-        if (min_side_length < short_side_thresh) {
+        if (min_side_length < this->short_side_thresh) {
             continue; // 跳过短边框
         }
         
@@ -86,11 +87,10 @@ DetResults BoundingBoxDetector::decode(std::vector<float> &outputData, const std
 
         // 计算置信度分数
         float score = box_score_fast(bitmap, box);
-        if (score < box_thresh) {
+        if (score < this->box_thresh) {
             continue; // 跳过低分框
         }
 
-        // 使用unclip_box函数进行基于轮廓的膨胀
         cv::Mat boxMat = unclip_box(boxPoints);
         
         // 添加到结果
@@ -231,4 +231,79 @@ float BoundingBoxDetector::box_score_fast(const cv::Mat &bitmap, const std::vect
     cv::Scalar meanVal = cv::mean(bitmapRoi, mask);
     
     return static_cast<float>(meanVal[0]);
+}
+
+cv::Mat BoundingBoxDetector::clip_and_rotate_image(const cv::Mat &image, const std::vector<cv::Point> &box) {
+    if (box.size() != 4) {
+        return cv::Mat();
+    }
+    
+    // 1. 对4个点进行排序，确保顺序为：左上, 右上, 右下, 左下 (顺时针)
+    std::vector<cv::Point2f> points;
+    for (const auto& point : box) {
+        points.push_back(cv::Point2f(static_cast<float>(point.x), static_cast<float>(point.y)));
+    }
+    
+    // 计算每个点的x+y和y-x
+    std::vector<std::pair<float, int>> sum_indices;
+    std::vector<std::pair<float, int>> diff_indices;
+    
+    for (int i = 0; i < 4; i++) {
+        float sum = points[i].x + points[i].y;
+        float diff = points[i].y - points[i].x;
+        sum_indices.emplace_back(sum, i);
+        diff_indices.emplace_back(diff, i);
+    }
+    
+    // 排序
+    std::sort(sum_indices.begin(), sum_indices.end());
+    std::sort(diff_indices.begin(), diff_indices.end());
+    
+    // 获取排序后的点
+    cv::Point2f tl = points[sum_indices[0].second]; // x+y 最小的是左上角
+    cv::Point2f br = points[sum_indices[3].second]; // x+y 最大的是右下角
+    cv::Point2f tr = points[diff_indices[0].second]; // y-x 最小的是右上角
+    cv::Point2f bl = points[diff_indices[3].second]; // y-x 最大的是左下角
+    
+    cv::Point2f src_pts[4] = {tl, tr, br, bl};
+    
+    // 2. 计算目标矩形的宽度和高度
+    float width_a = cv::norm(br - bl);
+    float width_b = cv::norm(tr - tl);
+    int dst_width = static_cast<int>(std::max(width_a, width_b));
+    
+    float height_a = cv::norm(tr - br);
+    float height_b = cv::norm(tl - bl);
+    int dst_height = static_cast<int>(std::max(height_a, height_b));
+    
+    // 添加最小尺寸限制
+    const int min_size = 10;
+    if (dst_width < min_size || dst_height < min_size) {
+        return cv::Mat();
+    }
+    
+    // 限制最大尺寸
+    const int max_size = 2000;
+    dst_width = std::min(dst_width, max_size);
+    dst_height = std::min(dst_height, max_size);
+    
+    // 3. 定义目标矩形的4个角点
+    cv::Point2f dst_pts[4] = {
+        cv::Point2f(0, 0),
+        cv::Point2f(dst_width - 1, 0),
+        cv::Point2f(dst_width - 1, dst_height - 1),
+        cv::Point2f(0, dst_height - 1)
+    };
+    
+    // 4. 计算透视变换矩阵并应用
+    cv::Mat warped;
+    cv::Mat transform_matrix = cv::getPerspectiveTransform(src_pts, dst_pts);
+    cv::warpPerspective(image, warped, transform_matrix, cv::Size(dst_width, dst_height));
+    
+    // 5. 处理竖排文本：如果校正后高度大于宽度，则顺时针旋转90度
+    if (warped.rows > warped.cols) {
+        cv::rotate(warped, warped, cv::ROTATE_90_CLOCKWISE);
+    }
+    
+    return warped;
 }

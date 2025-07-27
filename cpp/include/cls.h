@@ -14,10 +14,9 @@ class AngleClassifier {
         ~AngleClassifier();
 
         AngleResults getAngles(std::vector<float> &inputData);
+        std::array<int64_t, 4> cls_image_shape;
 
     private:
-        const std::array<int64_t, 4> cls_image_shape;
-
         Ort::Session *session;
         Ort::SessionOptions sessionOptions = Ort::SessionOptions();
         Ort::Env env = Ort::Env(ORT_LOGGING_LEVEL_WARNING, "AngleClassifier");

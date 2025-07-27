@@ -23,8 +23,23 @@ struct BoundingBox {
     BoundingBox(const cv::Mat& points, float sc) : boxPoints(points), score(sc) {}
 };
 
+struct PPOCRResult {
+    BoundingBox boundingBox;
+    Angle angle;
+
+};
+
+struct PreProcessedImage {
+    std::vector<float> data;
+    std::array<int64_t, 4> image_shape;
+
+    PreProcessedImage(const std::vector<float> &data, const std::array<int64_t, 4> &image_shape)
+        : data(data), image_shape(image_shape) {}
+};
+
 typedef std::vector<Angle> AngleResults;
 typedef std::vector<BoundingBox> DetResults;
+typedef std::vector<PPOCRResult> PPOCRResults;
 
 inline AngleType parseAngleType(const int index) {
     switch (index) {
