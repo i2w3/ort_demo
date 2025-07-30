@@ -13,7 +13,6 @@ class TextRecognizer:
     def __init__(self, config: BaseConfig):
         self.config = config
         self.image_shape = [3, 48, 320]
-        self.label_list = ['0', '180']
         self.dict_list = self.load_dict(config.dict_path)
 
         self.blank_idx:int = 0
@@ -54,7 +53,6 @@ class TextRecognizer:
             
             if idx == last_idx:
                 continue
-
             processed_indices.append(idx)
             last_idx = idx
 

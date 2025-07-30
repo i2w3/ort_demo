@@ -15,6 +15,7 @@ class TextRecognizer {
 
         TextResults getTexts(std::vector<float> &inputData);
         std::array<int64_t, 4> rec_image_shape;
+        std::vector<std::string> dict;
 
     private:
         Ort::Session *session;
@@ -26,7 +27,11 @@ class TextRecognizer {
         std::vector<const char*> inputNames;
         std::vector<const char*> outputNames;
 
-        std::vector<std::string> dict;
+        int dict_blank;
+        int dict_offset;
+        float text_thresh;
+        std::vector<std::string> getDict(const std::string &dict_path);
+        Contents ctcDecode(float* outputData, int batch_idx, int seq_len, int num_classes);
 };
 
 #endif // __REC_H__

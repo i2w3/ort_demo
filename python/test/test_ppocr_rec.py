@@ -35,10 +35,7 @@ if __name__ == "__main__":
     config = PPOCRv4()
     text_recognizer = TextRecognizer(config)
 
-    image_list = ["/home/tuf/code/ort_demo/python/cliped_image_1.jpg",
-                  "/home/tuf/code/ort_demo/python/cliped_image_2.jpg",
-                  "/home/tuf/code/ort_demo/python/cliped_image_3.jpg",
-                  "/home/tuf/code/ort_demo/python/cliped_image_4.jpg"]
+    image_list = ["/home/tuf/code/ort_demo/images/9.png"]
 
     tensor_data = np.zeros((len(image_list), 3, CONST_HEIGHT, MAX_WIDTH), dtype=np.float32)
 

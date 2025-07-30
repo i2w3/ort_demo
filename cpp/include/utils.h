@@ -9,13 +9,6 @@ enum class AngleType {
     ANGLE_180 = 1,
 };
 
-struct Angle {
-    AngleType index;
-    float score;
-
-    Angle(AngleType idx, float sc) : index(idx), score(sc) {}
-};
-
 struct BoundingBox {
     cv::Mat boxPoints; // 4x2 的矩阵，每一行代表一个顶点的 (x, y) 坐标，类型为 CV_32F (浮点型)
     float score;
@@ -23,23 +16,40 @@ struct BoundingBox {
     BoundingBox(const cv::Mat& points, float sc) : boxPoints(points), score(sc) {}
 };
 
+struct Angle {
+    AngleType index;
+    float score;
+
+    Angle(AngleType idx, float sc) : index(idx), score(sc) {}
+};
+
+struct Text {
+    std::string content; // 单个字符
+    float score;
+
+    Text(const std::string& text, float sc) : content(text), score(sc) {}
+};
+
 struct PPOCRResult {
     BoundingBox boundingBox;
     Angle angle;
-
+    Text text;
 };
 
+typedef std::vector<BoundingBox> DetResults;
+typedef std::vector<Angle> AngleResults;
+typedef std::vector<Text> Contents;
+typedef std::vector<Contents> TextResults;
+typedef std::vector<PPOCRResult> PPOCRResults;
+
 struct PreProcessedImage {
+    // only for BoundingBoxDetector
     std::vector<float> data;
     std::array<int64_t, 4> image_shape;
 
     PreProcessedImage(const std::vector<float> &data, const std::array<int64_t, 4> &image_shape)
         : data(data), image_shape(image_shape) {}
 };
-
-typedef std::vector<Angle> AngleResults;
-typedef std::vector<BoundingBox> DetResults;
-typedef std::vector<PPOCRResult> PPOCRResults;
 
 inline AngleType parseAngleType(const int index) {
     switch (index) {

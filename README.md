@@ -10,3 +10,8 @@ mamba activate cu126
 mamba install pytorch==2.7.1 torchvision==0.22.0 onnxruntime==1.22.0
 mamba install onnxruntime-cpp libopencv
 ```
+
+# python
+```
+PYTHONPATH=./ python ./test/test_ppocr_rec.py
+```

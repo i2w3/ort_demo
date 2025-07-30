@@ -49,7 +49,7 @@ AngleResults AngleClassifier::getAngles(std::vector<float> &inputData) {
     
     // 计算每个样本的输出大小（通常是类别数，如2或4）
     int classes_per_sample = outputCount / batch_size;
-    
+
     // 为每个批次中的样本处理结果
     // TODO: parallelize this if needed
     for (int batch_idx = 0; batch_idx < batch_size; batch_idx++) {

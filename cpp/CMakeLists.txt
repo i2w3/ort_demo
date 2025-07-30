@@ -39,9 +39,9 @@ find_package(ONNXRuntime REQUIRED)
 # target_include_directories(test_cls PRIVATE ${PROJECT_BINARY_DIR} ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS} ./include)
 # target_link_libraries(test_cls ${OpenCV_LIBS} ${ONNXRuntime_LIBRARIES})
 
-# add_executable(test_rec src/test_rec.cpp src/rec.cpp)
-# target_include_directories(test_rec PRIVATE ${PROJECT_BINARY_DIR} ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS} ./include)
-# target_link_libraries(test_rec ${OpenCV_LIBS} ${ONNXRuntime_LIBRARIES})
+add_executable(test_rec src/test_rec.cpp src/rec.cpp)
+target_include_directories(test_rec PRIVATE ${PROJECT_BINARY_DIR} ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS} ./include)
+target_link_libraries(test_rec ${OpenCV_LIBS} ${ONNXRuntime_LIBRARIES})
 
 add_library(ppocr SHARED src/ppocr.cpp src/det.cpp src/cls.cpp src/rec.cpp)
 target_include_directories(ppocr PRIVATE ${PROJECT_BINARY_DIR} ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS} ./include)

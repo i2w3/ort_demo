@@ -1,3 +1,8 @@
+#ifndef __VERSION_H__
+#define __VERSION_H__
+
 #define VERSION_MAJOR @ORTDemo_VERSION_MAJOR@
 #define VERSION_MINOR @ORTDemo_VERSION_MINOR@
 #define VERSION_PATCH @ORTDemo_VERSION_PATCH@
+
+#endif // __VERSION_H__
