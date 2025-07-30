@@ -35,7 +35,6 @@ class BoundingBoxDetector {
         float box_score_fast(const cv::Mat &bitmap, const std::vector<cv::Point> &box);
         cv::Mat unclip_box(const cv::Point2f box_points[4]);
         cv::Point2f _get_line_intersection(const cv::Point2f& a, const cv::Point2f& b, const cv::Point2f& c, const cv::Point2f& d);
-        
 };
 
 #endif // __DET_H__

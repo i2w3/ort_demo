@@ -5,10 +5,6 @@
 
 class Config {
     public:
-        bool enable_det = true;
-        bool enable_cls = true;
-        bool enable_rec = true;
-
         std::string cls_path = "";
         std::string det_path = "";
         std::string rec_path = "";

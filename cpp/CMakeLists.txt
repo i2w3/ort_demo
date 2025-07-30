@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(ORTDemo 
-        LANGUAGES CXX 
-        VERSION 0.1.0)
+project(ORTDemo LANGUAGES CXX VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -33,16 +31,19 @@ find_package(ONNXRuntime REQUIRED)
 #     message(FATAL_ERROR "ONNXRuntime Not Found!")
 # endif (ONNXRuntime_FOUND)
 
+# add_executable(test_det src/test_det.cpp src/det.cpp)
+# target_include_directories(test_det PRIVATE ${PROJECT_BINARY_DIR} ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS} ./include)
+# target_link_libraries(test_det ${OpenCV_LIBS} ${ONNXRuntime_LIBRARIES})
 
 # add_executable(test_cls src/test_cls.cpp src/cls.cpp)
 # target_include_directories(test_cls PRIVATE ${PROJECT_BINARY_DIR} ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS} ./include)
 # target_link_libraries(test_cls ${OpenCV_LIBS} ${ONNXRuntime_LIBRARIES})
 
-# add_executable(test_det src/test_det.cpp src/det.cpp)
-# target_include_directories(test_det PRIVATE ${PROJECT_BINARY_DIR} ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS} ./include)
-# target_link_libraries(test_det ${OpenCV_LIBS} ${ONNXRuntime_LIBRARIES})
+# add_executable(test_rec src/test_rec.cpp src/rec.cpp)
+# target_include_directories(test_rec PRIVATE ${PROJECT_BINARY_DIR} ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS} ./include)
+# target_link_libraries(test_rec ${OpenCV_LIBS} ${ONNXRuntime_LIBRARIES})
 
-add_library(ppocr SHARED src/ppocr.cpp src/det.cpp src/cls.cpp)
+add_library(ppocr SHARED src/ppocr.cpp src/det.cpp src/cls.cpp src/rec.cpp)
 target_include_directories(ppocr PRIVATE ${PROJECT_BINARY_DIR} ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS} ./include)
 target_link_libraries(ppocr ${OpenCV_LIBS} ${ONNXRuntime_LIBRARIES})
 if (USE_PARALLEL)

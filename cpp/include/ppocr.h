@@ -19,12 +19,12 @@ class PPOCR {
 
         PPOCRResults infer(const cv::Mat &image, bool &enable_det, bool &enable_cls);
         PreProcessedImage preprocess_image(const cv::Mat &image);
-        std::vector<float> preprocess_clip(cv::Mat &clip, const int &MAX_WIDTH);
+        std::vector<float> preprocess_clip(cv::Mat &clip, const int &clip_width);
 
     private:
         const std::vector<float> MEAN = {0.485f, 0.456f, 0.406f};
         const std::vector<float> STD = {0.229f, 0.224f, 0.225f};
-        const int CONST_HEIGHT = 48;
+        const int clip_height = 48;
 
         std::unique_ptr<BoundingBoxDetector> det_model;
         std::unique_ptr<AngleClassifier>     cls_model;

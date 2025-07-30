@@ -52,7 +52,7 @@ PPOCRResults PPOCR::infer(const cv::Mat &image, bool &enable_det, bool &enable_c
         std::cout << "--- Detection " << det_results.size() << " word blocks!" <<std::endl;
 
 
-        std::size_t idx = 0;
+        // std::size_t idx = 0;
         for (const auto& result : det_results) {
             // 提取四个顶点
             cv::Point2f box_points[4];
@@ -155,7 +155,7 @@ PreProcessedImage PPOCR::preprocess_image(const cv::Mat &image) {
 }
 
 
-std::vector<float> PPOCR::preprocess_clip(cv::Mat &clip, const int &MAX_WIDTH) {
+std::vector<float> PPOCR::preprocess_clip(cv::Mat &clip, const int &clip_width) {
     // int c = clip.channels();
     int h = clip.rows;
     int w = clip.cols;
@@ -165,27 +165,27 @@ std::vector<float> PPOCR::preprocess_clip(cv::Mat &clip, const int &MAX_WIDTH) {
 
 
     float ratio = w / h;
-    int resized_w = int(CONST_HEIGHT * ratio);
+    int resized_w = int(this->clip_height * ratio);
 
-    if (resized_w > MAX_WIDTH) {
-        resized_w = MAX_WIDTH;
+    if (resized_w > clip_width) {
+        resized_w = clip_width;
     }
 
 
-    cv::resize(image, image, cv::Size(resized_w, CONST_HEIGHT));
+    cv::resize(image, image, cv::Size(resized_w, this->clip_height));
 
-    int pad_w = MAX_WIDTH - resized_w;
+    int pad_w = clip_width - resized_w;
     int pad_h = 0;
 
     cv::copyMakeBorder(image, image, 0, pad_h, 0, pad_w, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
 
     cv::Mat float_image;
     image.convertTo(float_image, CV_32F, 1.0 / 255.0);
-    std::vector<float> input_data(1 * 3 * CONST_HEIGHT * MAX_WIDTH);
+    std::vector<float> input_data(1 * 3 * this->clip_height * clip_width);
 
     for (int c = 0; c < 3; c++) {
-        for (int h = 0; h < CONST_HEIGHT; h++) {
-            for (int w = 0; w < MAX_WIDTH; w++) {
+        for (int h = 0; h < this->clip_height; h++) {
+            for (int w = 0; w < clip_width; w++) {
                 cv::Vec3f pixel = float_image.at<cv::Vec3f>(h, w);
                 float value = pixel[c]; // RGB 通道
                 
@@ -193,7 +193,7 @@ std::vector<float> PPOCR::preprocess_clip(cv::Mat &clip, const int &MAX_WIDTH) {
                 value = (value - MEAN[c]) / STD[c];
                 
                 // 存储为 CHW 格式 (batch_size=1)
-                int index = c * CONST_HEIGHT * MAX_WIDTH + h * MAX_WIDTH + w;
+                int index = c * this->clip_height * clip_width + h * clip_width + w;
                 input_data[index] = value;
             }
         }
