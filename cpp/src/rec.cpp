@@ -67,7 +67,7 @@ TextResults TextRecognizer::getTexts(std::vector<float> &inputData) {
 
     // 获取输出张量的形状和数据
     std::vector<int64_t> outputShape = outputTensor[0].GetTensorTypeAndShapeInfo().GetShape();
-    int64_t outputCount = std::accumulate(outputShape.begin(), outputShape.end(), 1, std::multiplies<int64_t>());
+    // int64_t outputCount = std::accumulate(outputShape.begin(), outputShape.end(), 1, std::multiplies<int64_t>());
     float *floatArray = outputTensor[0].GetTensorMutableData<float>();
 
     // 输出形状应该是 (batch_size, seq_len, num_classes)

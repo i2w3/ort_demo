@@ -12,13 +12,17 @@ PPOCR::PPOCR(const Config &config){
     auto clsFuture = std::async(std::launch::async, [&config]() {
         return std::make_unique<AngleClassifier>(config);
     });
+    auto recFuture = std::async(std::launch::async, [&config]() {
+        return std::make_unique<TextRecognizer>(config);
+    });
     this->det_model = detFuture.get();
     this->cls_model = clsFuture.get();
+    this->rec_model = recFuture.get();
     #else
     this->det_model = std::make_unique<BoundingBoxDetector>(config);
     this->cls_model = std::make_unique<AngleClassifier>(config);
+    this->rec_model = std::make_unique<TextRecognizer>(config);
     #endif
-
 
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
@@ -30,27 +34,28 @@ PPOCR::~PPOCR() {
     std::cout << "--- PPOCR destructor called, resources cleaned up." << std::endl;
 }
 
-PPOCRResults PPOCR::infer(const cv::Mat &image, bool &enable_det, bool &enable_cls) {
+PPOCRResults PPOCR::infer(const cv::Mat &image, bool &enable_det, bool &enable_cls, bool &enable_rec) {
     PPOCRResults results;
     if (image.empty()) {
         std::cerr << "--- Error: Input image is empty." << std::endl;
         return results;
     }
-    if (!enable_det && !enable_cls) {
-        std::cerr << "--- Error: Both detection and classification are disabled." << std::endl;
+    if (!enable_rec) {
+        std::cerr << "--- Error: Recognition is disabled." << std::endl;
         return results;
     }
     std::vector<cv::Mat> clip_images;
 
+
+    DetResults det_results;
     if(enable_det) {
         // Step 1: Preprocess the image
         PreProcessedImage preprocessedImage = this->preprocess_image(image);
 
         // Step 2: Run the detection model
         auto det_data = this->det_model->detect(preprocessedImage.data, preprocessedImage.image_shape);
-        auto det_results = this->det_model->decode(det_data, preprocessedImage.image_shape);
+        det_results = this->det_model->decode(det_data, preprocessedImage.image_shape);
         std::cout << "--- Detection " << det_results.size() << " word blocks!" <<std::endl;
-
 
         // std::size_t idx = 0;
         for (const auto& result : det_results) {
@@ -74,6 +79,7 @@ PPOCRResults PPOCR::infer(const cv::Mat &image, bool &enable_det, bool &enable_c
         clip_images.push_back(image);
     }
 
+    AngleResults cls_results;
     if(enable_cls) {
         // Step 3: Preprocess each clip image for classification
         // TODO: Parallelize
@@ -93,7 +99,7 @@ PPOCRResults PPOCR::infer(const cv::Mat &image, bool &enable_det, bool &enable_c
         }
 
         // Step 4: Run the classification model
-        auto cls_results = this->cls_model->getAngles(clip_datas_flatten);
+        cls_results = this->cls_model->getAngles(clip_datas_flatten);
         std::cout << "--- Classification " << cls_results.size() << " angles!" << std::endl;
 
         for (size_t i = 0; i < cls_results.size(); ++i) {
@@ -103,18 +109,53 @@ PPOCRResults PPOCR::infer(const cv::Mat &image, bool &enable_det, bool &enable_c
         }
     }
     else{
-        // nothing to do
+        
     }
 
+    // Step 5: Preprocess each clip image for recognition
+    std::vector<std::vector<float>> clip_datas;
+    std::vector<float> clip_datas_flatten;
+    size_t total_size = 0;
 
-    // save clip_images
-    // for (size_t i = 0; i < clip_images.size(); ++i) {
-    //     cv::imwrite("clip_" + std::to_string(i) + ".png", clip_images[i]);
-    // }
+    for (auto &clip : clip_images) {
+        std::vector<float> clip_data = this->preprocess_clip(clip, this->rec_model->rec_image_shape[3]);
+        clip_datas.push_back(clip_data);
+        total_size += clip_data.size();
+    }
+    clip_datas_flatten.reserve(total_size);
+
+    for (const auto& clip_data : clip_datas) {
+        clip_datas_flatten.insert(clip_datas_flatten.end(), clip_data.begin(), clip_data.end());
+    }
+
+    // Step 6: Run the recognition model
+    auto rec_results = this->rec_model->getTexts(clip_datas_flatten);
+    std::cout << "--- Recognition " << rec_results.size() << " texts!" << std::endl;
+
+    // Step 7: Prepare the final results
+    results.reserve(rec_results.size());
+    
+    for(size_t i = 0; i < rec_results.size(); ++i) {
+        // Create appropriate bounding box based on detection enablement
+        cv::Mat boxPoints = cv::Mat::zeros(4, 2, CV_32F);
+        float bbox_score = 1.0f;
+        if (enable_det && i < det_results.size()) {
+            boxPoints = det_results[i].boxPoints.clone();  // Use actual detection results if available
+            bbox_score = det_results[i].score;
+        }
+        BoundingBox bbox(boxPoints, bbox_score);
+        
+        // Create appropriate angle based on classification enablement
+        Angle angle(AngleType::ANGLE_0, 1.0f);
+        if (enable_cls && i < cls_results.size()) {
+            angle = cls_results[i];
+        }
+        
+        // Use recognition results directly
+        results.push_back(PPOCRResult(bbox, angle, rec_results[i]));
+    }
     return results;
 }
-
-
 
 PreProcessedImage PPOCR::preprocess_image(const cv::Mat &image) {
     // int c = image.channels();

@@ -30,16 +30,20 @@ struct Text {
     Text(const std::string& text, float sc) : content(text), score(sc) {}
 };
 
-struct PPOCRResult {
-    BoundingBox boundingBox;
-    Angle angle;
-    Text text;
-};
-
 typedef std::vector<BoundingBox> DetResults;
 typedef std::vector<Angle> AngleResults;
 typedef std::vector<Text> Contents;
 typedef std::vector<Contents> TextResults;
+
+struct PPOCRResult {
+    BoundingBox boundingBox;
+    Angle angle;
+    Contents contents;
+
+    PPOCRResult(const BoundingBox& bbox, const Angle& ang, const Contents& txt)
+        : boundingBox(bbox), angle(ang), contents(txt) {}
+};
+
 typedef std::vector<PPOCRResult> PPOCRResults;
 
 struct PreProcessedImage {
