@@ -118,9 +118,9 @@ def detailed_benchmark(detector, tensor, num_runs=10):
 
 if __name__ == "__main__":
     detector = MultiLabelClassification("/home/tuf/code/ort_demo/models/resnet18.onnx")
-    image = cv2.imread("/home/tuf/code/ort_demo/images/1.png")
+    image = cv2.imread("/home/tuf/code/ort_demo/images/10.jpg")
     tensor = preprocess(image)
-    # results = detector(tensor)
-    # print(results)
+    results = detector(tensor)
+    print(results)
 
-    detailed_stats = detailed_benchmark(detector, tensor, num_runs=10)
+    detailed_stats = detailed_benchmark(detector, tensor, num_runs=100)

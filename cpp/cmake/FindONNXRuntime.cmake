@@ -15,8 +15,6 @@
 #
 include(FindPackageHandleStandardArgs)
 
-message(STATUS "Searching for ONNX Runtime...")
-
 # Get conda environment path from environment variable or use explicit path
 set(ONNXRUNTIME_CONDA_PATHS
     $ENV{CONDA_PREFIX}

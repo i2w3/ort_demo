@@ -1,6 +1,5 @@
-cmake_minimum_required(VERSION 3.10)
-
-project(ORTDemo LANGUAGES CXX VERSION 0.1.0)
+cmake_minimum_required(VERSION 3.21)
+project(ORTDemo LANGUAGES CXX CUDA VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -31,6 +30,14 @@ find_package(ONNXRuntime REQUIRED)
 #     message(FATAL_ERROR "ONNXRuntime Not Found!")
 # endif (ONNXRuntime_FOUND)
 
+find_package(CUDAToolkit REQUIRED)
+# if (CUDAToolkit_FOUND)
+#     message(STATUS "CUDAToolkit_LIBS: ${CUDAToolkit_LIBRARIES}") # now is none, so dont use it
+#     message(STATUS "CUDAToolkit_INCLUDE_DIRS: ${CUDAToolkit_INCLUDE_DIRS}")
+# else ()
+#     message(FATAL_ERROR "CUDAToolkit Not Found!")
+# endif (CUDAToolkit_FOUND)
+
 # add_executable(test_det src/test_det.cpp src/det.cpp)
 # target_include_directories(test_det PRIVATE ${PROJECT_BINARY_DIR} ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS} ./include)
 # target_link_libraries(test_det ${OpenCV_LIBS} ${ONNXRuntime_LIBRARIES})
@@ -39,9 +46,9 @@ find_package(ONNXRuntime REQUIRED)
 # target_include_directories(test_cls PRIVATE ${PROJECT_BINARY_DIR} ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS} ./include)
 # target_link_libraries(test_cls ${OpenCV_LIBS} ${ONNXRuntime_LIBRARIES})
 
-add_executable(test_rec src/test_rec.cpp src/rec.cpp)
-target_include_directories(test_rec PRIVATE ${PROJECT_BINARY_DIR} ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS} ./include)
-target_link_libraries(test_rec ${OpenCV_LIBS} ${ONNXRuntime_LIBRARIES})
+# add_executable(test_rec src/test_rec.cpp src/rec.cpp)
+# target_include_directories(test_rec PRIVATE ${PROJECT_BINARY_DIR} ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS} ./include)
+# target_link_libraries(test_rec ${OpenCV_LIBS} ${ONNXRuntime_LIBRARIES})
 
 add_library(ppocr SHARED src/ppocr.cpp src/det.cpp src/cls.cpp src/rec.cpp)
 target_include_directories(ppocr PRIVATE ${PROJECT_BINARY_DIR} ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS} ./include)
@@ -53,3 +60,11 @@ endif()
 add_executable(test_ppocr src/test_ppocr.cpp)
 target_include_directories(test_ppocr PRIVATE ${PROJECT_BINARY_DIR} ${OpenCV_INCLUDE_DIRS} ./include)
 target_link_libraries(test_ppocr ppocr)
+
+add_executable(demo src/demo.cpp)
+target_include_directories(demo PRIVATE ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS})
+target_link_libraries(demo ${OpenCV_LIBS} ${ONNXRuntime_LIBRARIES})
+
+add_executable(demo2 src/demo2.cpp)
+target_include_directories(demo2 PRIVATE ${OpenCV_INCLUDE_DIRS} ${ONNXRuntime_INCLUDE_DIRS} ${CUDAToolkit_INCLUDE_DIRS})
+target_link_libraries(demo2 ${OpenCV_LIBS} ${ONNXRuntime_LIBRARIES} CUDA::cudart CUDA::cublas)
